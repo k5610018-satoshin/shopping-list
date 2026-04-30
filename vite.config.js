@@ -1,7 +1,8 @@
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
+  base: command === 'build' ? '/shopping-list/' : '/',
   plugins: [
     VitePWA({
       registerType: 'autoUpdate',
@@ -10,7 +11,8 @@ export default defineConfig({
         name: '買い物リスト',
         short_name: '買い物',
         description: '冷蔵庫と日用品を1タップで記録',
-        start_url: '/',
+        start_url: command === 'build' ? '/shopping-list/' : '/',
+        scope: command === 'build' ? '/shopping-list/' : '/',
         display: 'standalone',
         background_color: '#ffffff',
         theme_color: '#4caf50',
@@ -36,4 +38,4 @@ export default defineConfig({
     })
   ],
   server: { host: true, port: 5173 }
-});
+}));
