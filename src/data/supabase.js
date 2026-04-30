@@ -19,11 +19,23 @@ export async function getSession() {
 
 export async function signInWithEmail(email) {
   if (!supabase) throw new Error('Supabase 未設定');
+  const redirectTo = window.location.origin + import.meta.env.BASE_URL;
   const { error } = await supabase.auth.signInWithOtp({
     email,
-    options: { emailRedirectTo: window.location.origin },
+    options: { emailRedirectTo: redirectTo },
   });
   if (error) throw error;
+}
+
+export async function verifyOtp(email, token) {
+  if (!supabase) throw new Error('Supabase 未設定');
+  const { data, error } = await supabase.auth.verifyOtp({
+    email,
+    token,
+    type: 'email',
+  });
+  if (error) throw error;
+  return data;
 }
 
 export async function signOut() {

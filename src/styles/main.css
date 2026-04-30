@@ -90,6 +90,69 @@ button, input {
   padding: 16px;
   border-radius: 8px;
 }
+.auth-divider {
+  margin: 28px 0 12px;
+  text-align: center;
+  position: relative;
+  color: var(--muted);
+  font-size: 13px;
+}
+.auth-divider::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--border);
+  z-index: 0;
+}
+.auth-divider span {
+  background: var(--bg);
+  padding: 0 12px;
+  position: relative;
+  z-index: 1;
+}
+.auth-hint {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 0 0 12px;
+}
+#otp-form {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+#otp-form input {
+  flex: 1;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 22px;
+  letter-spacing: 8px;
+  text-align: center;
+  font-family: 'Courier New', monospace;
+}
+#otp-form button {
+  padding: 14px 18px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.auth-link {
+  display: block;
+  margin: 24px auto 0;
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 14px;
+  text-decoration: underline;
+  cursor: pointer;
+}
 
 /* ================ Screen ================ */
 .screen {
