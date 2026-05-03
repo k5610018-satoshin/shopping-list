@@ -7,6 +7,7 @@ export const state = {
   search: '',
   ready: false,
   toast: null,
+  editMode: false,
 };
 
 export function subscribe(fn) {

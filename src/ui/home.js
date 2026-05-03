@@ -1,4 +1,4 @@
-import { state, setState } from '../state.js';
+import { state, setState, showToast } from '../state.js';
 import { compareItems, inShoppingList } from '../logic/statusTransition.js';
 import { tileHtml, attachTileEvents } from './tile.js';
 import { openAddModal } from './add-modal.js';
@@ -15,8 +15,10 @@ export function renderHome(root) {
     ? `<button class="add-suggest" id="add-suggest">「${escapeHtml(state.search)}」を追加</button>`
     : '';
 
+  const editClass = state.editMode ? ' edit-mode' : '';
+
   root.innerHTML = `
-    <div class="screen home-screen">
+    <div class="screen home-screen${editClass}">
       <header class="top-bar">
         <div class="search-row">
           <input
@@ -26,9 +28,11 @@ export function renderHome(root) {
             value="${escapeAttr(state.search)}"
             autocomplete="off"
           />
-          <button id="voice-btn" class="icon-btn" aria-label="音声入力">🎤</button>
           <button id="add-btn" class="icon-btn" aria-label="追加">＋</button>
+          <button id="edit-btn" class="icon-btn ${state.editMode ? 'icon-btn-active' : ''}" aria-label="編集">✏️</button>
+          <button id="share-btn" class="icon-btn" aria-label="共有">📤</button>
         </div>
+        ${state.editMode ? '<div class="edit-banner">編集モード：タイルをタップで編集／削除</div>' : ''}
         ${addNew}
       </header>
 
@@ -56,32 +60,36 @@ export function renderHome(root) {
     root.querySelector('#add-suggest').addEventListener('click', () => openAddModal(state.search));
   }
   root.querySelector('#tab-shopping').addEventListener('click', () =>
-    setState({ tab: 'shopping', search: '' })
+    setState({ tab: 'shopping', search: '', editMode: false })
   );
-
-  const voiceBtn = root.querySelector('#voice-btn');
-  voiceBtn.addEventListener('click', () => startVoiceInput(search));
-  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-    voiceBtn.style.display = 'none';
-  }
+  root.querySelector('#edit-btn').addEventListener('click', () =>
+    setState({ editMode: !state.editMode })
+  );
+  root.querySelector('#share-btn').addEventListener('click', () => shareApp());
 
   attachTileEvents(root.querySelector('.tile-grid'));
 }
 
-function startVoiceInput(searchInput) {
-  const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!Rec) return;
-  const rec = new Rec();
-  rec.lang = 'ja-JP';
-  rec.continuous = false;
-  rec.interimResults = false;
-  rec.onresult = (e) => {
-    const text = e.results[0][0].transcript.replace(/[。、・,．\s]+$/, '');
-    setState({ search: text });
-    searchInput.value = text;
-  };
-  rec.onerror = (e) => console.warn('voice error', e.error);
-  rec.start();
+async function shareApp() {
+  const url = window.location.href.split('?')[0].split('#')[0];
+  const title = '買い物リスト';
+  const text = '家族で同期できる買い物リスト';
+  if (navigator.share) {
+    try {
+      await navigator.share({ title, text, url });
+    } catch (e) {
+      // ユーザーキャンセル、何もしない
+    }
+  } else if (navigator.clipboard) {
+    try {
+      await navigator.clipboard.writeText(url);
+      showToast('URLをコピーしました');
+    } catch {
+      showToast(url);
+    }
+  } else {
+    showToast(url);
+  }
 }
 
 function escapeHtml(s) {

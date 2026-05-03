@@ -2,17 +2,20 @@ import { applyLocalChange } from '../data/sync.js';
 import { nextStatus } from '../logic/statusTransition.js';
 import { state } from '../state.js';
 import { supabase } from '../data/supabase.js';
+import { openEditModal } from './edit-modal.js';
 
-const LONG_PRESS_MS = 400;
+const LONG_PRESS_MS = 450;
 
 export function tileHtml(item) {
   const pinned = item.is_pinned ? ' tile-pinned' : '';
   const buyMark = item.status === 'out' ? '<span class="tile-buy-mark">買う</span>' : '';
+  const editPin = state.editMode ? '<span class="tile-edit-mark">✏️</span>' : '';
   return `
     <button class="tile tile-${item.status}${pinned}" data-id="${item.id}" aria-label="${item.name}">
       <span class="tile-emoji">${item.emoji || '🛒'}</span>
       <span class="tile-name">${escapeHtml(item.name)}</span>
       ${buyMark}
+      ${editPin}
     </button>`;
 }
 
@@ -62,6 +65,11 @@ async function handleTap(tile) {
   const id = tile.dataset.id;
   const item = state.items.find((i) => i.id === id);
   if (!item) return;
+  // 編集モード中はタップで編集モーダルを開く
+  if (state.editMode) {
+    openEditModal(id);
+    return;
+  }
   const next = nextStatus(item.status);
   tile.classList.add('tile-pulse');
   setTimeout(() => tile.classList.remove('tile-pulse'), 180);
@@ -72,6 +80,8 @@ async function handleLongPress(tile) {
   const id = tile.dataset.id;
   const item = state.items.find((i) => i.id === id);
   if (!item) return;
+  // 編集モード中の長押しは無視（タップで編集なので）
+  if (state.editMode) return;
   tile.classList.add('tile-bought');
   setTimeout(() => tile.classList.remove('tile-bought'), 400);
   const now = new Date().toISOString();
