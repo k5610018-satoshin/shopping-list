@@ -1,18 +1,18 @@
 import { applyLocalChange } from '../data/sync.js';
-import { nextStatus, STATUS_DOT } from '../logic/statusTransition.js';
+import { nextStatus } from '../logic/statusTransition.js';
 import { state } from '../state.js';
 import { supabase } from '../data/supabase.js';
 
-const LONG_PRESS_MS = 350;
+const LONG_PRESS_MS = 400;
 
 export function tileHtml(item) {
-  const dot = STATUS_DOT[item.status] || '🟢';
   const pinned = item.is_pinned ? ' tile-pinned' : '';
+  const buyMark = item.status === 'out' ? '<span class="tile-buy-mark">買う</span>' : '';
   return `
-    <button class="tile tile-${item.status}${pinned}" data-id="${item.id}" aria-label="${item.name} ${item.status}">
+    <button class="tile tile-${item.status}${pinned}" data-id="${item.id}" aria-label="${item.name}">
       <span class="tile-emoji">${item.emoji || '🛒'}</span>
       <span class="tile-name">${escapeHtml(item.name)}</span>
-      <span class="tile-dot">${dot}</span>
+      ${buyMark}
     </button>`;
 }
 
@@ -64,7 +64,7 @@ async function handleTap(tile) {
   if (!item) return;
   const next = nextStatus(item.status);
   tile.classList.add('tile-pulse');
-  setTimeout(() => tile.classList.remove('tile-pulse'), 200);
+  setTimeout(() => tile.classList.remove('tile-pulse'), 180);
   await applyLocalChange(id, { status: next });
 }
 
@@ -81,11 +81,7 @@ async function handleLongPress(tile) {
       (Date.now() - new Date(item.last_bought_at).getTime()) / 86400000
     );
   }
-  await applyLocalChange(id, {
-    status: 'stock',
-    last_bought_at: now,
-    sort_score: (item.sort_score || 0) + 1,
-  });
+  await applyLocalChange(id, { status: 'stock', last_bought_at: now });
   if (supabase && state.householdId) {
     supabase
       .from('purchase_history')
@@ -93,7 +89,7 @@ async function handleLongPress(tile) {
         item_id: id,
         household_id: state.householdId,
         bought_at: now,
-        bought_by: state.user?.id || null,
+        bought_by: null,
         interval_days: intervalDays,
       })
       .then(({ error }) => {

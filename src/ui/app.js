@@ -1,5 +1,4 @@
 import { state } from '../state.js';
-import { renderAuth } from './auth.js';
 import { renderHome } from './home.js';
 import { renderShopping } from './shopping.js';
 
@@ -9,9 +8,7 @@ export function renderApp() {
     root.innerHTML = `<div class="loading">読み込み中…</div>`;
     return;
   }
-  if (!state.user) {
-    renderAuth(root);
-  } else if (state.tab === 'shopping') {
+  if (state.tab === 'shopping') {
     renderShopping(root);
   } else {
     renderHome(root);

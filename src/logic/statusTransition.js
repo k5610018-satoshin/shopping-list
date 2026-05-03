@@ -1,32 +1,31 @@
-const ORDER = ['stock', 'soon', 'out'];
+// 状態は2段階のみ：stock(ある) ↔ out(買う)
+// タップ1回で stock <-> out をトグル
 
 export const STATUS_LABEL = {
   stock: 'ある',
-  soon: 'そろそろ',
-  out: 'ない',
+  out: '買う',
 };
 
 export const STATUS_DOT = {
-  stock: '🟢',
-  soon: '🟠',
-  out: '🔴',
+  stock: '',
+  out: '🛒',
 };
 
 export function nextStatus(current) {
-  const i = ORDER.indexOf(current);
-  return ORDER[(i + 1) % ORDER.length];
+  return current === 'stock' ? 'out' : 'stock';
 }
 
 export function inShoppingList(status) {
-  return status === 'soon' || status === 'out';
+  return status === 'out';
 }
 
-const STATUS_RANK = { out: 0, soon: 1, stock: 2 };
-
+// ソートは「ピン留め > 登録順(created_at ASC)」で完全固定
+// 状態が変わってもタイル位置が動かないようにする
 export function compareItems(a, b) {
   const pin = (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0);
   if (pin !== 0) return pin;
-  const status = STATUS_RANK[a.status] - STATUS_RANK[b.status];
-  if (status !== 0) return status;
+  if (a.created_at && b.created_at) {
+    return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+  }
   return (b.sort_score || 0) - (a.sort_score || 0);
 }

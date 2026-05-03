@@ -1,51 +1,32 @@
 import { state, setState, subscribe } from './state.js';
-import {
-  supabase,
-  isConfigured,
-  getSession,
-  ensureHousehold,
-  onAuthChange,
-} from './data/supabase.js';
+import { supabase, isConfigured } from './data/supabase.js';
 import { loadItems, saveItems } from './data/localStore.js';
-import { fetchItems, startRealtime, stopRealtime, flushPending } from './data/sync.js';
+import { fetchItems, startRealtime, flushPending } from './data/sync.js';
 import { renderApp } from './ui/app.js';
+
+const HOUSEHOLD_ID =
+  import.meta.env.VITE_HOUSEHOLD_ID ||
+  '00000000-0000-0000-0000-000000000001';
 
 subscribe(() => renderApp());
 
 async function bootstrap() {
-  if (!isConfigured) {
-    setState({ ready: true });
-    return;
-  }
-  const session = await getSession();
-  if (session) {
-    await initSession(session);
-  }
-  setState({ ready: true });
-  onAuthChange(async (event, sess) => {
-    if (event === 'SIGNED_IN' && sess) {
-      await initSession(sess);
-    } else if (event === 'SIGNED_OUT') {
-      stopRealtime();
-      setState({ user: null, householdId: null, items: [] });
-    }
-  });
-}
+  setState({ householdId: HOUSEHOLD_ID });
 
-async function initSession(session) {
-  setState({ user: session.user });
   const cached = await loadItems();
   if (cached.length > 0) setState({ items: cached });
+  setState({ ready: true });
+
+  if (!isConfigured) return;
+
   try {
-    const householdId = await ensureHousehold(session.user.id, session.user.email);
-    setState({ householdId });
-    const items = await fetchItems(householdId);
+    const items = await fetchItems(HOUSEHOLD_ID);
     setState({ items });
     await saveItems(items);
-    startRealtime(householdId);
+    startRealtime(HOUSEHOLD_ID);
     await flushPending();
   } catch (e) {
-    console.error('initSession failed', e);
+    console.error('bootstrap failed', e);
   }
 }
 

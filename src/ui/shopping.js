@@ -1,12 +1,12 @@
 import { state, setState } from '../state.js';
 import { applyLocalChange } from '../data/sync.js';
-import { inShoppingList, STATUS_DOT } from '../logic/statusTransition.js';
+import { inShoppingList, compareItems } from '../logic/statusTransition.js';
 import { supabase } from '../data/supabase.js';
 
 export function renderShopping(root) {
   const items = state.items
     .filter((i) => inShoppingList(i.status))
-    .sort((a, b) => (a.status === 'out' ? -1 : 1) - (b.status === 'out' ? -1 : 1));
+    .sort(compareItems);
 
   root.innerHTML = `
     <div class="screen shopping-screen">
@@ -22,7 +22,6 @@ export function renderShopping(root) {
               <input type="checkbox" />
               <span class="shop-emoji">${i.emoji || '🛒'}</span>
               <span class="shop-name">${escapeHtml(i.name)}</span>
-              <span class="shop-dot">${STATUS_DOT[i.status]}</span>
             </label>
           `).join('')}
       </main>
@@ -40,7 +39,7 @@ export function renderShopping(root) {
   root.querySelector('#tab-home').addEventListener('click', () => setState({ tab: 'home' }));
 
   root.querySelectorAll('.shop-row').forEach((row) => {
-    row.addEventListener('change', async (e) => {
+    row.addEventListener('change', async () => {
       const id = row.dataset.id;
       const checkbox = row.querySelector('input');
       if (!checkbox.checked) return;
@@ -54,11 +53,7 @@ export function renderShopping(root) {
           (Date.now() - new Date(item.last_bought_at).getTime()) / 86400000
         );
       }
-      await applyLocalChange(id, {
-        status: 'stock',
-        last_bought_at: now,
-        sort_score: (item.sort_score || 0) + 1,
-      });
+      await applyLocalChange(id, { status: 'stock', last_bought_at: now });
       if (supabase && state.householdId) {
         supabase
           .from('purchase_history')
@@ -66,7 +61,7 @@ export function renderShopping(root) {
             item_id: id,
             household_id: state.householdId,
             bought_at: now,
-            bought_by: state.user?.id || null,
+            bought_by: null,
             interval_days: intervalDays,
           })
           .then(({ error }) => {

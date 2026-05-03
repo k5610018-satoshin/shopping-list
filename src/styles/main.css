@@ -262,22 +262,25 @@ button, input {
   max-width: 100%;
   font-weight: 500;
 }
-.tile-dot {
-  position: absolute;
-  top: 4px;
-  right: 6px;
-  font-size: 12px;
-}
 .tile-stock {
   background: white;
-}
-.tile-soon {
-  background: #fff5e1;
-  border-color: var(--orange);
 }
 .tile-out {
   background: #ffe8e6;
   border-color: var(--red);
+  border-width: 2px;
+}
+.tile-buy-mark {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  background: var(--red);
+  color: white;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 8px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
 }
 .tile-pinned::before {
   content: "📌";
@@ -360,9 +363,6 @@ button, input {
 }
 .shop-name {
   flex: 1;
-}
-.shop-dot {
-  font-size: 14px;
 }
 .shop-row-bought {
   opacity: 0;

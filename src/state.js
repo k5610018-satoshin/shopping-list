@@ -1,13 +1,11 @@
 const listeners = new Set();
 
 export const state = {
-  user: null,
   householdId: null,
   items: [],
   tab: 'home',
   search: '',
   ready: false,
-  authMessage: null,
   toast: null,
 };
 
